@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Eye, MousePointer, MessageSquare, Plus, Copy, Edit3, Search } from 'lucide-react';
+import { FileText, Eye, MousePointer, MessageSquare, Plus, Copy, Edit3, Search, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { templates } from '../data/mockData';
 import type { EmailTemplate } from '../types';
 
@@ -9,6 +9,43 @@ export default function TemplatesPage() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const handleSendTest = async () => {
+    if (!selectedTemplate || sending) return;
+    const to = testEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      setSendStatus({ ok: false, message: 'Enter a valid recipient email address.' });
+      return;
+    }
+    setSending(true);
+    setSendStatus(null);
+    try {
+      // Real send via the server-side Resend integration (/api/send-email).
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'custom',
+          to,
+          subject: selectedTemplate.subject,
+          body: selectedTemplate.body,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.ok) {
+        setSendStatus({ ok: true, message: `Email sent to ${to} via Resend.` });
+      } else {
+        setSendStatus({ ok: false, message: json?.error || `Send failed (HTTP ${res.status}).` });
+      }
+    } catch {
+      setSendStatus({ ok: false, message: 'Network error — could not reach the email service.' });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const filtered = templates.filter(t => {
     const matchSearch = `${t.name} ${t.subject}`.toLowerCase().includes(search.toLowerCase());
@@ -141,6 +178,35 @@ export default function TemplatesPage() {
               <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-[#1E1735] text-white text-xs font-medium hover:border-violet-500/30 transition-colors">
                 <Copy className="w-3.5 h-3.5" /> Duplicate
               </button>
+            </div>
+
+            {/* Send a real test email via Resend */}
+            <div className="mt-4 rounded-xl border border-[#1E1735] bg-white/[0.03] p-3">
+              <p className="text-[10px] font-semibold text-gray-500 uppercase mb-2">Send Test Email (Resend)</p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  placeholder="recipient@example.com"
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-[#0D0818] border border-[#1E1735] text-xs text-white placeholder:text-gray-600 outline-none focus:border-violet-500/50"
+                />
+                <button
+                  onClick={handleSendTest}
+                  disabled={sending || !testEmail}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 text-white text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-3.5 h-3.5" /> {sending ? 'Sending…' : 'Send'}
+                </button>
+              </div>
+              {sendStatus && (
+                <p className={`flex items-start gap-1.5 mt-2 text-[11px] ${sendStatus.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {sendStatus.ok
+                    ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-[1px]" />
+                    : <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-[1px]" />}
+                  {sendStatus.message}
+                </p>
+              )}
             </div>
           </div>
         )}

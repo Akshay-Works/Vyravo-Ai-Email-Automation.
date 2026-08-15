@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, X, ExternalLink, Search } from 'lucide-react';
 import { integrations } from '../data/mockData';
 
@@ -7,14 +7,34 @@ const categories = ['All', ...new Set(integrations.map(i => i.category))];
 export default function IntegrationsPage() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [resendConfigured, setResendConfigured] = useState<boolean | null>(null);
 
-  const filtered = integrations.filter(i => {
+  // Live check of server-side integration config (no secrets exposed).
+  useEffect(() => {
+    fetch('/api/status')
+      .then(r => r.json())
+      .then(data => setResendConfigured(Boolean(data?.resend?.configured)))
+      .catch(() => setResendConfigured(null));
+  }, []);
+
+  // Reflect the real Resend connection state on its card.
+  const displayIntegrations = integrations.map(i =>
+    i.name === 'Resend' && resendConfigured === false
+      ? {
+          ...i,
+          status: 'disconnected' as const,
+          description: 'Not configured — add RESEND_API_KEY and RESEND_FROM_EMAIL in Vercel environment variables.',
+        }
+      : i
+  );
+
+  const filtered = displayIntegrations.filter(i => {
     const matchSearch = `${i.name} ${i.description}`.toLowerCase().includes(search.toLowerCase());
     const matchCat = activeCategory === 'All' || i.category === activeCategory;
     return matchSearch && matchCat;
   });
 
-  const connected = integrations.filter(i => i.status === 'connected').length;
+  const connected = displayIntegrations.filter(i => i.status === 'connected').length;
 
   return (
     <div className="space-y-4">
