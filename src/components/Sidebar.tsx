@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Mail, GitBranch, FileText, BarChart3,
-  Megaphone, Sparkles, Puzzle, Settings, Zap, X
+  Megaphone, Sparkles, Puzzle, Settings, Zap, X, Globe
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import type { Page } from '../types';
@@ -84,7 +84,7 @@ export default function Sidebar() {
         </nav>
 
         {/* Bottom */}
-        <div className="p-4 border-t border-[#1E1735] shrink-0">
+        <div className="p-4 border-t border-[#1E1735] shrink-0 space-y-3">
           <div className="bg-gradient-to-br from-violet-600/10 to-cyan-500/10 rounded-xl p-3 border border-violet-500/10">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-violet-400" />
@@ -94,6 +94,16 @@ export default function Sidebar() {
               Smart automation managing 2,355+ emails across 8 active workflows.
             </p>
           </div>
+          <a
+            href="https://vyravo-ai.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/30 transition-all"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Globe className="w-4 h-4" />
+            Back to Main Site
+          </a>
         </div>
       </aside>
     </>

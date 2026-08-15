@@ -25,7 +25,15 @@ export default function TopBar() {
         </button>
         <div>
           <h1 className="text-lg font-bold text-white">{pageTitles[currentPage] || 'Dashboard'}</h1>
-          <p className="text-[11px] text-gray-500 hidden sm:block">Vyravo AI Email Automation System</p>
+          <a
+            href="https://vyravo-ai.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-gray-500 hidden sm:block hover:text-violet-400 transition-colors"
+            title="Visit the Vyravo AI main website"
+          >
+            Vyravo AI Email Automation System — visit main site ↗
+          </a>
         </div>
       </div>
 
